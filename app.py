@@ -55,12 +55,10 @@ def verify_slack_request(req) -> bool:
         app.logger.warning("Invalid Slack timestamp header")
         return False
 
-    # Reject requests older than 5 minutes to help prevent replay attacks
     if abs(time.time() - timestamp_int) > 60 * 5:
         app.logger.warning("Slack request timestamp too old")
         return False
 
-    # IMPORTANT: use the raw request body exactly as Slack sent it
     raw_body = req.get_data(as_text=True)
     basestring = f"v0:{timestamp}:{raw_body}"
 
@@ -71,6 +69,11 @@ def verify_slack_request(req) -> bool:
     ).hexdigest()
 
     return hmac.compare_digest(computed_signature, slack_signature)
+
+
+@app.route("/", methods=["GET"])
+def home():
+    return "Slack PagerDuty app is running", 200
 
 
 @app.route("/slack/command", methods=["POST"])
@@ -112,10 +115,10 @@ def slack_command():
                 "summary": f"PagerDuty event triggered from Slack by {user_id}",
                 "severity": "critical",
                 "source": "slack-demo"
+            }
         }
-    }
 
-        app.logger.info(f"Sending PagerDuty event: {pd_payload}")
+        app.logger.info("Sending PagerDuty event: %s", pd_payload)
 
         response = requests.post(
             "https://events.pagerduty.com/v2/enqueue",
@@ -130,6 +133,11 @@ def slack_command():
         )
 
         response.raise_for_status()
+
+        return jsonify({
+            "response_type": "ephemeral",
+            "text": f"PagerDuty request submitted successfully. Status: {response.status_code}"
+        }), 200
 
     except requests.RequestException as exc:
         app.logger.error(f"Failed to trigger PagerDuty event: {exc}")
