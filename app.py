@@ -71,16 +71,19 @@ def verify_slack_request(req) -> bool:
     return hmac.compare_digest(computed_signature, slack_signature)
 
 
-def trigger_pagerduty_event(user_name: str) -> requests.Response:
+def trigger_pagerduty_event(user_name: str, issue_description: str) -> requests.Response:
+    summary = f"{user_name} is paging SRE for help regarding {issue_description}"
+
     pd_payload = {
         "routing_key": PAGERDUTY_KEY,
         "event_action": "trigger",
         "payload": {
-            "summary": f"PagerDuty event triggered from Slack by {user_name}",
+            "summary": summary,
             "severity": "critical",
             "source": "slack-demo",
             "custom_details": {
-                "requested_by": user_name
+                "requested_by": user_name,
+                "issue_description": issue_description
             }
         }
     }
@@ -117,11 +120,18 @@ def slack_command():
         }), 401
 
     user_id = request.form.get("user_id")
+    issue_description = request.form.get("text", "").strip()
 
     if not user_id:
         return jsonify({
             "response_type": "ephemeral",
             "text": "Missing Slack user ID in request."
+        }), 400
+
+    if not issue_description:
+        return jsonify({
+            "response_type": "ephemeral",
+            "text": "Please include a brief description, for example: /page-sre checkout is failing"
         }), 400
 
     allowed_users = load_allowed_users()
@@ -141,11 +151,11 @@ def slack_command():
         }), 500
 
     try:
-        response = trigger_pagerduty_event(user_name)
+        response = trigger_pagerduty_event(user_name, issue_description)
 
         return jsonify({
             "response_type": "ephemeral",
-            "text": f"PagerDuty request submitted successfully by {user_name}. Status: {response.status_code}"
+            "text": f"PagerDuty request submitted successfully by {user_name} for: {issue_description}. Status: {response.status_code}"
         }), 200
 
     except requests.RequestException as exc:
