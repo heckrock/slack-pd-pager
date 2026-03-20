@@ -105,31 +105,38 @@ def slack_command():
         }), 500
 
     try:
-        response = requests.post(
-            "https://events.pagerduty.com/v2/enqueue",
-            json={
-                "routing_key": PAGERDUTY_KEY,
-                "event_action": "trigger",
-                "payload": {
-                    "summary": f"PagerDuty event triggered from Slack by {user_id}",
-                    "severity": "critical",
-                    "source": "slack-demo"
-                }
-            },
-            timeout=10,
-        )
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        app.logger.error(f"Failed to trigger PagerDuty event: {exc}")
-        return jsonify({
-            "response_type": "ephemeral",
-            "text": "Failed to submit the PagerDuty request."
-        }), 502
+    pd_payload = {
+        "routing_key": PAGERDUTY_KEY,
+        "event_action": "trigger",
+        "payload": {
+            "summary": f"PagerDuty event triggered from Slack by {user_id}",
+            "severity": "critical",
+            "source": "slack-demo"
+        }
+    }
 
+    app.logger.info(f"Sending PagerDuty event: {pd_payload}")
+
+    response = requests.post(
+        "https://events.pagerduty.com/v2/enqueue",
+        json=pd_payload,
+        timeout=10,
+    )
+
+    app.logger.info(
+        "PagerDuty response status=%s body=%s",
+        response.status_code,
+        response.text
+    )
+
+    response.raise_for_status()
+
+except requests.RequestException as exc:
+    app.logger.error(f"Failed to trigger PagerDuty event: {exc}")
     return jsonify({
-        "response_type": "in_channel",
-        "text": f"PagerDuty event triggered by <@{user_id}>"
-    }), 200
+        "response_type": "ephemeral",
+        "text": "Failed to submit the PagerDuty request."
+    }), 502
 
 
 if __name__ == "__main__":
