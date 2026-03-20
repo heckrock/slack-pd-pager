@@ -71,6 +71,35 @@ def verify_slack_request(req) -> bool:
     return hmac.compare_digest(computed_signature, slack_signature)
 
 
+def trigger_pagerduty_event(user_id: str) -> requests.Response:
+    pd_payload = {
+        "routing_key": PAGERDUTY_KEY,
+        "event_action": "trigger",
+        "payload": {
+            "summary": f"PagerDuty event triggered from Slack by {user_id}",
+            "severity": "critical",
+            "source": "slack-demo"
+        }
+    }
+
+    app.logger.info("Sending PagerDuty event: %s", pd_payload)
+
+    response = requests.post(
+        "https://events.pagerduty.com/v2/enqueue",
+        json=pd_payload,
+        timeout=10,
+    )
+
+    app.logger.info(
+        "PagerDuty response status=%s body=%s",
+        response.status_code,
+        response.text
+    )
+
+    response.raise_for_status()
+    return response
+
+
 @app.route("/", methods=["GET"])
 def home():
     return "Slack PagerDuty app is running", 200
@@ -97,7 +126,7 @@ def slack_command():
     if user_id not in allowed_user_ids:
         return jsonify({
             "response_type": "ephemeral",
-            "text": "You are not allowed to page SRE, follow the proper escalation process."
+            "text": "User is not allowed."
         }), 403
 
     if not PAGERDUTY_KEY:
@@ -108,42 +137,18 @@ def slack_command():
         }), 500
 
     try:
-        pd_payload = {
-            "routing_key": PAGERDUTY_KEY,
-            "event_action": "trigger",
-            "payload": {
-                "summary": f"PagerDuty event triggered from Slack by {user_id}",
-                "severity": "critical",
-                "source": "slack-demo"
-            }
-        }
-
-        app.logger.info("Sending PagerDuty event: %s", pd_payload)
-
-        response = requests.post(
-            "https://events.pagerduty.com/v2/enqueue",
-            json=pd_payload,
-            timeout=10,
-        )
-
-        app.logger.info(
-            "PagerDuty response status=%s body=%s",
-            response.status_code,
-            response.text
-        )
-
-        response.raise_for_status()
+        response = trigger_pagerduty_event(user_id)
 
         return jsonify({
             "response_type": "ephemeral",
-            "text": f"PagerDuty request submitted successfully. Status: {response.status_code}"
+            "text": f"PagerDuty request submitted successfully by <@{user_id}>. Status: {response.status_code}"
         }), 200
 
     except requests.RequestException as exc:
         app.logger.error(f"Failed to trigger PagerDuty event: {exc}")
         return jsonify({
             "response_type": "ephemeral",
-            "text": "Failed to submit the PagerDuty request."
+            "text": f"Failed to submit the PagerDuty request for <@{user_id}>."
         }), 502
 
 
