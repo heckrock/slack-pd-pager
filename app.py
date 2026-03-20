@@ -155,7 +155,7 @@ def slack_command():
 
         return jsonify({
             "response_type": "ephemeral",
-            "text": f"PagerDuty request submitted successfully by {user_name} for: {issue_description}. Status: {response.status_code}"
+            "text": f"PagerDuty request submitted successfully by {user_name} for: {issue_description}."
         }), 200
 
     except requests.RequestException as exc:
