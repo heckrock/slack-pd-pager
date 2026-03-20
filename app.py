@@ -15,26 +15,26 @@ SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET", "")
 ALLOWED_USERS_FILE = Path("allowed_users.json")
 
 
-def load_allowed_user_ids() -> set[str]:
+def load_allowed_users() -> dict[str, str]:
     try:
         with ALLOWED_USERS_FILE.open("r", encoding="utf-8") as f:
             data = json.load(f)
 
         users = data.get("allowed_users", [])
         return {
-            user["id"]
+            user["id"]: user.get("name", user["id"])
             for user in users
             if isinstance(user, dict) and "id" in user
         }
     except FileNotFoundError:
         app.logger.error("allowed_users.json not found")
-        return set()
+        return {}
     except json.JSONDecodeError:
         app.logger.error("allowed_users.json is not valid JSON")
-        return set()
+        return {}
     except Exception as exc:
         app.logger.error(f"Unexpected error loading allowed users: {exc}")
-        return set()
+        return {}
 
 
 def verify_slack_request(req) -> bool:
@@ -71,14 +71,17 @@ def verify_slack_request(req) -> bool:
     return hmac.compare_digest(computed_signature, slack_signature)
 
 
-def trigger_pagerduty_event(user_id: str) -> requests.Response:
+def trigger_pagerduty_event(user_name: str) -> requests.Response:
     pd_payload = {
         "routing_key": PAGERDUTY_KEY,
         "event_action": "trigger",
         "payload": {
-            "summary": f"PagerDuty event triggered from Slack by {user_id}",
+            "summary": f"PagerDuty event triggered from Slack by {user_name}",
             "severity": "critical",
-            "source": "slack-demo"
+            "source": "slack-demo",
+            "custom_details": {
+                "requested_by": user_name
+            }
         }
     }
 
@@ -121,9 +124,10 @@ def slack_command():
             "text": "Missing Slack user ID in request."
         }), 400
 
-    allowed_user_ids = load_allowed_user_ids()
+    allowed_users = load_allowed_users()
+    user_name = allowed_users.get(user_id)
 
-    if user_id not in allowed_user_ids:
+    if not user_name:
         return jsonify({
             "response_type": "ephemeral",
             "text": "User is not allowed."
@@ -137,18 +141,18 @@ def slack_command():
         }), 500
 
     try:
-        response = trigger_pagerduty_event(user_id)
+        response = trigger_pagerduty_event(user_name)
 
         return jsonify({
             "response_type": "ephemeral",
-            "text": f"PagerDuty request submitted successfully by <@{user_id}>. Status: {response.status_code}"
+            "text": f"PagerDuty request submitted successfully by {user_name}. Status: {response.status_code}"
         }), 200
 
     except requests.RequestException as exc:
         app.logger.error(f"Failed to trigger PagerDuty event: {exc}")
         return jsonify({
             "response_type": "ephemeral",
-            "text": f"Failed to submit the PagerDuty request for <@{user_id}>."
+            "text": f"Failed to submit the PagerDuty request for {user_name}."
         }), 502
 
 
