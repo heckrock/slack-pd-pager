@@ -32,8 +32,8 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
 
     print(schedule_ids)
     params = {
-        "schedule_ids[]": schedule_ids,
-        "include[]": "users"
+        'schedule_ids[]': schedule_ids,
+        'include[]': 'users'
     }
 
     response = requests.get(PAGERDUTY_API_URL, headers=headers, params=params)
