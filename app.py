@@ -35,8 +35,8 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
     # Build params as list of tuples
     params = [(('schedule_ids[]', sid)) for sid in schedule_ids]
     params.append(('include[]', 'users'))
-    params.append(('since', (now - timedelta(minutes=5)).isoformat()))
-    params.append(('until', (now + timedelta(hours=2)).isoformat()))
+    params.append(('since', (now - timedelta(days=1)).isoformat()))
+    params.append(('until', (now + timedelta(days=1)).isoformat()))
     
     print(params)
     response = requests.get(PAGERDUTY_API_URL, headers=headers, params=params)
@@ -51,13 +51,17 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
     oncalls = data.get("oncalls", [])
     print("RAW ONCALLS:", oncalls)
 
+
     users = []
     for oc in oncalls:
-        user = oc.get("user", {})
-        users.append({
-            "id": user.get("id"),
-            "name": user.get("summary"),
-            "email": user.get("email")
+        start = datetime.fromisoformat(oc["start"].replace("Z", "+00:00"))
+        end = datetime.fromisoformat(oc["end"].replace("Z", "+00:00"))
+        if start <= now <= end:
+            user = oc.get("user", {})
+            users.append({
+                "id": user.get("id"),
+                "name": user.get("summary"),
+                "email": user.get("email")
         })
 
     return users
