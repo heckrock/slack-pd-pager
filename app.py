@@ -38,6 +38,9 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
 
     response = requests.get(PAGERDUTY_API_URL, headers=headers, params=params)
     response.raise_for_status()
+    
+    print("Request URL:", response.url)
+    print("Status:", response.status_code) 
 
     data = response.json()
 
