@@ -199,7 +199,7 @@ def slack_command():
             "text": f"Failed to submit the PagerDuty request for {user_name}."
         }), 502
 
-@app.route("/oncall", methods=["GET"])
+@app.route("/oncall", methods=["POST"])
 def oncall():
     schedule_id = request.args.get("schedule_id")
 
