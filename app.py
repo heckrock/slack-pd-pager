@@ -33,10 +33,8 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
     data = response.json()
 
     # Filter by escalation level (default = primary on-call)
-    oncalls = [
-        oc for oc in data.get("oncalls", [])
-        if oc.get("escalation_level") == escalation_level
-    ]
+    oncalls = data.get("oncalls", [])
+    print("RAW ONCALLS:", oncalls)
 
     users = []
     for oc in oncalls:
