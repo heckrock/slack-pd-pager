@@ -199,7 +199,7 @@ def slack_command():
 
 @app.route("/slack/oncall", methods=["POST"])
 def oncall():
-    schedule_id = "PW30PB4,PNUHG1I,"
+    schedule_id = "PW30PB4,PNUHG1I"
 
     if not schedule_id:
         return jsonify({"error": "Missing schedule_id"}), 400
@@ -208,7 +208,8 @@ def oncall():
         users = get_oncall_users(schedule_id, PAGERDUTY_API_TOKEN)
         return jsonify({
             "response_type": "ephemeral",
-            "text": f"SRE On-Call": users}),200
+            "text": f"SRE On-Call": {users}
+            }),200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
