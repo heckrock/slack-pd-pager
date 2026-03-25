@@ -22,15 +22,15 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
         "Authorization": f"Token token={api_token}",
         "Accept": "application/vnd.pagerduty+json;version=2"
     }
-    
-    if isinstance(schedule_id, str):
+   # print(schedule_id) 
+    #if isinstance(schedule_id, str):
         schedule_ids = [s.strip() for s in schedule_id.split(",") if s.strip()]
-    elif isinstance(schedule_id, list):
-        schedule_ids = schedule_id
-    else:
-        raise ValueError("Invalid schedule_id format")
+    #elif isinstance(schedule_id, list):
+     #   schedule_ids = schedule_id
+    #else:
+     #   raise ValueError("Invalid schedule_id format")
 
-
+    #print(schedule_ids)
     params = {
         "schedule_ids[]": schedule_id,
         "include[]": "users"
