@@ -200,7 +200,8 @@ def slack_command():
 
 @app.route("/slack/oncall", methods=["POST"])
 def oncall():
-    schedule_id = PAGERDUTY_SCHEDULES
+    
+    schedule_id = [s.strip() for s in PAGERDUTY_SCHEDULES.split(",") if s.strip()]
 
     if not schedule_id:
         return jsonify({"error": "Missing schedule_id"}), 400
