@@ -31,10 +31,10 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
         raise ValueError("Invalid schedule_id format")
 
     print(schedule_ids)
-    params = {
-        'schedule_ids[]': schedule_ids,
-        'include[]': 'users'
-    }
+    # Build params as list of tuples
+    params = [(('schedule_ids[]', sid)) for sid in schedule_ids]
+    params.append(('include[]', 'users'))
+
 
     response = requests.get(PAGERDUTY_API_URL, headers=headers, params=params)
     response.raise_for_status()
