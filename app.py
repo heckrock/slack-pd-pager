@@ -145,7 +145,7 @@ def home():
     return "Slack PagerDuty app is running", 200
 
 
-@app.route("/slack/command", methods=["POST"])
+@app.route("/slack/page", methods=["POST"])
 def slack_command():
     if not verify_slack_request(request):
         return jsonify({
@@ -199,7 +199,7 @@ def slack_command():
             "text": f"Failed to submit the PagerDuty request for {user_name}."
         }), 502
 
-@app.route("/oncall", methods=["POST"])
+@app.route("/slack/oncall", methods=["POST"])
 def oncall():
     schedule_id = request.args.get("schedule_id")
 
