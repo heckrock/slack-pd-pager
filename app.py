@@ -36,7 +36,7 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
     params = [(('schedule_ids[]', sid)) for sid in schedule_ids]
     params.append(('include[]', 'users'))
     params.append(('since', (now - timedelta(minutes=5)).isoformat()))
-    params.append(('until', (now + timedelta(minutes=5)).isoformat()))
+    params.append(('until', (now + timedelta(hours=2)).isoformat()))
     
     print(params)
     response = requests.get(PAGERDUTY_API_URL, headers=headers, params=params)
