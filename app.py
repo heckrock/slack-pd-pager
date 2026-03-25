@@ -205,11 +205,22 @@ def oncall():
         return jsonify({"error": "Missing schedule_id"}), 400
 
     try:
+
         users = get_oncall_users(schedule_id, PAGERDUTY_API_TOKEN)
+
+        if not users:
+            message = "No one is currently on-call."
+        else:
+            message = "\n".join([
+                f"• {u['name']} ({u['email']})"
+                for u in users
+            ])
+
         return jsonify({
             "response_type": "ephemeral",
-            "text": f"SRE On-Call": {users}
-            }),200
+            "text": f"SRE On-Call:\n{message}"
+        }), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
