@@ -44,9 +44,9 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
     
     print("Request URL:", response.url)
     print("Status:", response.status_code) 
-
+    
     data = response.json()
-
+    print("PagerDuty response:", data)
     # Filter by escalation level (default = primary on-call)
     oncalls = data.get("oncalls", [])
     print("RAW ONCALLS:", oncalls)
