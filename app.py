@@ -23,7 +23,13 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
         "Accept": "application/vnd.pagerduty+json;version=2"
     }
     
-    
+    if isinstance(schedule_id, str):
+        schedule_ids = [s.strip() for s in schedule_id.split(",") if s.strip()]
+    elif isinstance(schedule_id, list):
+        schedule_ids = schedule_id
+    else:
+        raise ValueError("Invalid schedule_id format")
+
 
     params = {
         "schedule_ids[]": schedule_id,
@@ -204,16 +210,14 @@ def slack_command():
 def oncall():
     
     print(PAGERDUTY_SCHEDULES)
-   
-    schedule_id = PAGERDUTY_SCHEDULES
+
     
-    print(schedule_id)
-    if not schedule_id:
+    if not PAGERDUTY_SCHEDULES:
         return jsonify({"error": "Missing schedule_id"}), 400
 
     try:
 
-        users = get_oncall_users(schedule_id, PAGERDUTY_API_TOKEN)
+        users = get_oncall_users(PAGERDUTY_SCHEDULES, PAGERDUTY_API_TOKEN)
 
         if not users:
             message = "No one is currently on-call."
