@@ -186,7 +186,7 @@ def slack_command():
         response = trigger_pagerduty_event(user_name, issue_description)
 
         return jsonify({
-            "response_type": "ephemeral",
+            "response_type": "in_channel",
             "text": f"PagerDuty request submitted successfully by {user_name} for: {issue_description}."
         }), 200
 
@@ -217,7 +217,7 @@ def oncall():
             ])
 
         return jsonify({
-            "response_type": "ephemeral",
+            "response_type": "in_channel",
             "text": f"SRE On-Call:\n{message}"
         }), 200
 
