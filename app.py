@@ -22,6 +22,8 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
         "Authorization": f"Token token={api_token}",
         "Accept": "application/vnd.pagerduty+json;version=2"
     }
+    
+    
 
     params = {
         "schedule_ids[]": schedule_id,
@@ -202,8 +204,8 @@ def slack_command():
 def oncall():
     
     print(PAGERDUTY_SCHEDULES)
-    schedule_ids = [s.strip() for s in os.getenv("PAGERDUTY_SCHEDULES", "").split(",") if s.strip()]
-    schedule_id = ",".join(schedule_ids)
+   
+    schedule_id = PAGERDUTY_SCHEDULES
     
     print(schedule_id)
     if not schedule_id:
