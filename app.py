@@ -202,8 +202,9 @@ def slack_command():
 def oncall():
     
     print(PAGERDUTY_SCHEDULES)
-    #schedule_id = [s.strip() for s in PAGERDUTY_SCHEDULES.split(",") if s.strip()]
-    schedule_id = "PW30PB4,PNUHG1I,POHRO9R"
+    schedule_ids = [s.strip() for s in os.getenv("PAGERDUTY_SCHEDULES", "").split(",") if s.strip()]
+    schedule_id = ",".join(schedule_ids)
+    
     print(schedule_id)
     if not schedule_id:
         return jsonify({"error": "Missing schedule_id"}), 400
