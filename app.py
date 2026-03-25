@@ -15,6 +15,7 @@ SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET", "")
 ALLOWED_USERS_FILE = Path("allowed_users.json")
 PAGERDUTY_API_URL = "https://api.pagerduty.com/oncalls"
 PAGERDUTY_API_TOKEN = os.environ.get("PAGERDUTY_API_TOKEN")
+PAGERDUTY_SCHEDULES = os.environ.get("PAGERDUTY_SCHEDULES")
 
 def get_oncall_users(schedule_id, api_token, escalation_level=1):
     headers = {
@@ -199,7 +200,7 @@ def slack_command():
 
 @app.route("/slack/oncall", methods=["POST"])
 def oncall():
-    schedule_id = "PW30PB4,PNUHG1I"
+    schedule_id = PAGERDUTY_SCHEDULES
 
     if not schedule_id:
         return jsonify({"error": "Missing schedule_id"}), 400
