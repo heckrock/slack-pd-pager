@@ -63,8 +63,8 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
                 "name": user.get("summary"),
                 "email": user.get("email")
         })
-
-    return users
+    unique_users = {u["id"]: u for u in users}.values()
+    return unique_users
 
 def load_allowed_users() -> dict[str, str]:
     try:
