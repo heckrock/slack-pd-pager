@@ -24,7 +24,7 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
     }
    # print(schedule_id) 
     #if isinstance(schedule_id, str):
-        schedule_ids = [s.strip() for s in schedule_id.split(",") if s.strip()]
+      #  schedule_ids = [s.strip() for s in schedule_id.split(",") if s.strip()]
     #elif isinstance(schedule_id, list):
      #   schedule_ids = schedule_id
     #else:
