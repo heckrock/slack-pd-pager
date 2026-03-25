@@ -13,7 +13,41 @@ app = Flask(__name__)
 PAGERDUTY_KEY = os.environ.get("PAGERDUTY_ROUTING_KEY")
 SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET", "")
 ALLOWED_USERS_FILE = Path("allowed_users.json")
+PAGERDUTY_API_URL = "https://api.pagerduty.com/oncalls"
+PAGERDUTY_API_TOKEN = os.environ.get("PAGERDUTY_API_TOKEN")
 
+def get_oncall_users(schedule_id, api_token, escalation_level=1):
+    headers = {
+        "Authorization": f"Token token={api_token}",
+        "Accept": "application/vnd.pagerduty+json;version=2"
+    }
+
+    params = {
+        "schedule_ids[]": schedule_id,
+        "include[]": "users"
+    }
+
+    response = requests.get(PAGERDUTY_API_URL, headers=headers, params=params)
+    response.raise_for_status()
+
+    data = response.json()
+
+    # Filter by escalation level (default = primary on-call)
+    oncalls = [
+        oc for oc in data.get("oncalls", [])
+        if oc.get("escalation_level") == escalation_level
+    ]
+
+    users = []
+    for oc in oncalls:
+        user = oc.get("user", {})
+        users.append({
+            "id": user.get("id"),
+            "name": user.get("summary"),
+            "email": user.get("email")
+        })
+
+    return users
 
 def load_allowed_users() -> dict[str, str]:
     try:
@@ -165,6 +199,18 @@ def slack_command():
             "text": f"Failed to submit the PagerDuty request for {user_name}."
         }), 502
 
+@app.route("/oncall", methods=["GET"])
+def oncall():
+    schedule_id = request.args.get("schedule_id")
+
+    if not schedule_id:
+        return jsonify({"error": "Missing schedule_id"}), 400
+
+    try:
+        users = get_oncall_users(schedule_id, PAGERDUTY_API_TOKEN)
+        return jsonify({"oncall_users": users})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
