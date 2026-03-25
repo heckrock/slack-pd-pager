@@ -22,6 +22,7 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
         "Authorization": f"Token token={api_token}",
         "Accept": "application/vnd.pagerduty+json;version=2"
     }
+    now = datetime.now(timezone.utc)
     print(schedule_id) 
     if isinstance(schedule_id, str):
         schedule_ids = [s.strip() for s in schedule_id.split(",") if s.strip()]
@@ -34,6 +35,8 @@ def get_oncall_users(schedule_id, api_token, escalation_level=1):
     # Build params as list of tuples
     params = [(('schedule_ids[]', sid)) for sid in schedule_ids]
     params.append(('include[]', 'users'))
+    params.append(('since', (now - timedelta(minutes=5)).isoformat()))
+    params.append(('until', (now + timedelta(minutes=5)).isoformat()))
 
 
     response = requests.get(PAGERDUTY_API_URL, headers=headers, params=params)
