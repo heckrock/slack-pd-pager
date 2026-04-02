@@ -1,3 +1,4 @@
-flask
+azure-functions>=1.20.0
 requests
+flask
 gunicorn

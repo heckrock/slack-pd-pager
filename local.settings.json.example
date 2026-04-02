@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "SLACK_SIGNING_SECRET": "",
+    "PAGERDUTY_ROUTING_KEY": "",
+    "PAGERDUTY_API_TOKEN": "",
+    "PAGERDUTY_SCHEDULES": ""
+  }
+}
